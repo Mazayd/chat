@@ -1,6 +1,10 @@
-const { BaseController } = require('./base.controller');
+const { MessageService } = require('../services/message.service');
 
-class MessageController extends BaseController {
+class MessageController {
+	constructor() {
+		this.messageService = new MessageService();
+	}
+
 	async sendMessage(ws, ms, wss) {
 		const { room_id, data, token } = ms;
 		const result = await this.messageService.sendMessage(room_id, data, token, wss);

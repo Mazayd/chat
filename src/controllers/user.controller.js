@@ -1,6 +1,10 @@
-const { BaseController } = require('./base.controller');
+const { UserService } = require('../services/user.service');
 
-class UserController extends BaseController {
+class UserController {
+	constructor() {
+		this.userService = new UserService();
+	}
+
 	async registerUser(ws, ms, wss) {
 		const { username, password, secret_answer } = ms;
 		const result = await this.userService.registerUser(username, password, secret_answer, ws);

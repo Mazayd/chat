@@ -1,6 +1,10 @@
-const { BaseController } = require('../controllers/base.controller');
+const { RoomService } = require('../services/room.service');
 
-class RoomController extends BaseController {
+class RoomController {
+	constructor() {
+		this.roomService = new RoomService();
+	}
+
 	async createRoom(ws, ms, wss) {
 		const { password, token } = ms;
 		const result = await this.roomService.createRoom(password, token);

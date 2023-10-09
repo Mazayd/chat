@@ -22,7 +22,7 @@ class SocketDispatcherController {
 		};
 	}
 
-	async test(ws, ms, wss) {
+	async socketDispatcher(ws, ms, wss) {
 		if (this.methods[ms.method]) {
 			await this.methods[ms.method](ws, ms, wss);
 		} else {
