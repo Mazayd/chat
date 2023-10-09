@@ -1,6 +1,29 @@
-const { BaseService } = require('./base.service');
+const { UserModel } = require('../models/user.model');
+const { RoomModel } = require('../models/room.model');
+const { MessageModel } = require('../models/message.model');
+const { generatePasswordHash, comparePassword } = require('../lib/cryptography/password');
+const { generateRandomKeyAndIv } = require('../lib/cryptography/keyGenerationAndIv');
+const { encryptionRoomKeyAndIv } = require('../lib/cryptography/encryptionRoomKeyAndIv');
+const { decryptionRoomKeyAndIv } = require('../lib/cryptography/decryptionRoomKetAndIv');
+const { encryptionRoomKeyAndIvByUserPubKey } = require('../lib/cryptography/encryptionRoomKeyAndIvByUserPubKey');
+const { emitUpdateRoomMessage } = require('../event/emitUpdateRoomMessage');
+const { auth } = require('../lib/auth/auth');
 
-class RoomService extends BaseService {
+class RoomService {
+	constructor() {
+		this.userModel = new UserModel();
+		this.roomModel = new RoomModel();
+		this.messageModel = new MessageModel();
+		this.generatePasswordHash = generatePasswordHash;
+		this.comparePassword = comparePassword;
+		this.generateRandomKeyAndIv = generateRandomKeyAndIv;
+		this.encryptionRoomKeyAndIv = encryptionRoomKeyAndIv;
+		this.decryptionRoomKeyAndIv = decryptionRoomKeyAndIv;
+		this.emitUpdateRoomMessage = emitUpdateRoomMessage;
+		this.encryptionRoomKeyAndIvByUserPubKey = encryptionRoomKeyAndIvByUserPubKey;
+		this.auth = auth;
+	}
+
 	async createRoom(password, token) {
 		try {
 			const decode = await this.auth(token);
@@ -24,12 +47,12 @@ class RoomService extends BaseService {
 	async joinRoom(room_id, password, token, ws, wss) {
 		try {
 			const decode = await this.auth(token);
-			ws.id = decode.id;
 			const room = await this.roomModel.getRoomById(room_id);
 			if (!room.length) {
 				return { success: false, message: 'The room with such an ID does not exist.' };
 			}
-			if (!(await this.comparePassword(password, room[0].password))) {
+			const checkPassword = await this.comparePassword(password, room[0].password);
+			if (!checkPassword) {
 				return { success: false, message: 'Incorrect password' };
 			}
 			const user = await this.userModel.getUserById(decode.id);
@@ -41,7 +64,9 @@ class RoomService extends BaseService {
 				pub_key
 			);
 			const usersRoom = await this.roomModel.getUsersRoom(room_id);
-			if (usersRoom.some((obj) => obj.user_id === decode.id)) {
+			const isUserInRoom = usersRoom.some((obj) => obj.user_id === decode.id);
+			if (isUserInRoom) {
+				ws.id = decode.id;
 				ws.room = room[0].id;
 				return {
 					success: true,
@@ -57,15 +82,16 @@ class RoomService extends BaseService {
 			}
 			await this.roomModel.addUserToRoom(room_id, decode.id);
 			const newUsersRoom = await this.roomModel.getUsersRoom(room_id);
+			ws.id = decode.id;
 			ws.room = room[0].id;
-			this.emitUpdateRoomMessage(
+			this.emitUpdateRoomMessage({
 				wss,
 				room_id,
-				newUsersRoom,
+				usersRoom: newUsersRoom,
 				decode,
-				[{ id: decode.id, username: decode.username }],
-				'newUserInRoom'
-			);
+				message: [{ id: decode.id, username: decode.username }],
+				action: 'newUserInRoom',
+			});
 			return {
 				success: true,
 				message: 'Your room.',

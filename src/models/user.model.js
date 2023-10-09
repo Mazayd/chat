@@ -1,6 +1,11 @@
-const { BaseModel } = require('./base.model');
+const knexConfig = require('../../knexfile');
+const knex = require('knex');
 
-class UserModel extends BaseModel {
+class UserModel {
+	constructor() {
+		this.db = knex(knexConfig);
+	}
+
 	async createUser(data) {
 		return await this.db('users').insert(data).returning('id');
 	}

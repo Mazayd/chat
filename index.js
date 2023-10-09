@@ -13,6 +13,6 @@ wss.on('connection', (ws, req) => {
 	ws.send('you connected');
 	ws.on('message', async (message) => {
 		const ms = JSON.parse(message);
-		await socketDispatcherController.test(ws, ms, wss);
+		await socketDispatcherController.socketDispatcher(ws, ms, wss);
 	});
 });
