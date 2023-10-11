@@ -11,6 +11,8 @@ services:
    
   app:
     build: .
-    
+    command: bash -c "npm install && npm run migration && npm start"  
+    depends_on:
+      - db
 
     

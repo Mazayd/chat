@@ -11,7 +11,7 @@ To get started with the project, follow these build steps:
 To wrap the application in a Docker container, follow these build steps:
 
 1. Execute the command `sudo docker-compose up`.
-2. After the containers are running, use the command `sudo docker exec -it chat_app_1 /bin/bash` to enter inside the container.
-3. Inside the container, use the command `npx knex migrate:latest` to apply migrations.
-4. Points 2 and 3 need to be executed only once during the initial build.
-5. You can access the application container using the URL `ws://172.18.0.3:5000/` or `ws://172.18.0.2:5000/`.
+2. You can access the application container using the URL `ws://172.18.0.3:5000/` or `ws://172.18.0.2:5000/`.
+3. To stop the containers in the terminal where you executed the command from the first step, press the key combination `ctrl + c`.
+4. To remove the containers, use the command: `sudo docker rm chat_app_1 chat_db_1`.
+5. To delete images, first ensure there are no containers created from these images. If there are, execute the previous step, then apply the command: `sudo docker image rm postgres chat_app`.
